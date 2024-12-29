@@ -80,9 +80,11 @@ fun TaskDetailScreen(
             modifier = Modifier.padding(paddingValues)
         )
 
+        
         // Check for user messages to display on the screen
         uiState.userMessage?.let { userMessage ->
             val snackbarText = stringResource(userMessage)
+
             LaunchedEffect(snackbarHostState, viewModel, userMessage, snackbarText) {
                 snackbarHostState.showSnackbar(snackbarText)
                 viewModel.snackbarMessageShown()

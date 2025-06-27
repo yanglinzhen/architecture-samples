@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.compose.animation.fadeIn
 import androidx.core.os.bundleOf
 import androidx.fragment.app.setFragmentResult
 import androidx.navigation.fragment.findNavController
@@ -15,6 +16,8 @@ import com.example.android.architecture.blueprints.todoapp.R
 import com.example.android.architecture.blueprints.todoapp.data.entity.AuthType
 import com.example.android.architecture.blueprints.todoapp.data.entity.UserData
 import com.example.android.architecture.blueprints.todoapp.databinding.FragmentAuthBinding
+import com.example.android.architecture.blueprints.todoapp.page.landing.LandingFragment
+import timber.log.Timber
 
 class AuthFragment : Fragment() {
 
@@ -45,19 +48,28 @@ class AuthFragment : Fragment() {
                         "result" to arrayOf(data.toString(), binding.password.text).toString()
                     )
                 )
-                findNavController().navigate(
-                    route = UserData("23525", "Marco"),
-                    navOptions {
-                        this.launchSingleTop = true
+
+                findNavController()
+                    .apply {
+                        this.currentBackStack.value.map {
+                            it.destination.label
+                        }.joinToString().also {
+                            Timber.d(it)
+                        }
+
+                        //Stack before: null, Landing, Auth,
+                        //and setFragmentResult will not take effect, if called navigateUp(), it will work
+                        navigate(
+                            route = UserData("23525", "Marco"),
+                            navOptions {
+                                popUpTo<UserData> {
+                                    inclusive = true
+                                }
+                            }
+                        )
+                        //Stack after: null, Landing
                     }
-                )
-//                findNavController().popBackStack(
-//                    route = UserData("3", "f0wij"),
-//                    inclusive = true
-//                )
-//                findNavController().navigate(
-//
-//                )
+
             }
         }
 

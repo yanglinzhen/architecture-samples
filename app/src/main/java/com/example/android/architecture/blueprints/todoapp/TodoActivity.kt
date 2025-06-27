@@ -23,6 +23,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.navigation.createGraph
 import androidx.navigation.findNavController
+import androidx.navigation.fragment.FragmentNavigatorDestinationBuilder
 import androidx.navigation.fragment.fragment
 import com.example.android.architecture.blueprints.todoapp.data.entity.AuthData
 import com.example.android.architecture.blueprints.todoapp.data.entity.Credentials
@@ -31,6 +32,7 @@ import com.example.android.architecture.blueprints.todoapp.data.entity.UserData
 import com.example.android.architecture.blueprints.todoapp.page.auth.AuthFragment
 import com.example.android.architecture.blueprints.todoapp.page.landing.LandingFragment
 import dagger.hilt.android.AndroidEntryPoint
+import timber.log.Timber
 import kotlin.reflect.typeOf
 
 /**
@@ -52,11 +54,15 @@ class TodoActivity : AppCompatActivity() {
     override fun onStart() {
         super.onStart()
         val navController = findNavController(R.id.nav_host)
+
         navController.graph = navController.createGraph(
             startDestination = UserData("1", "Jake")
         ) {
             fragment<LandingFragment, UserData> {
                 label = "Landing"
+                this.route.also {
+                    Timber.d("route: $it")
+                }
             }
             fragment<AuthFragment, AuthData>(
                 typeMap = mapOf(

@@ -30,6 +30,16 @@ class LandingFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        findNavController()
+            .apply {
+                this.currentBackStack.value.map {
+                    it.destination.label
+                }.joinToString().also {
+                    Timber.d(it)
+                }
+            }
+
         binding.title.text = viewModel.userData.userName
         binding.text.text = viewModel.userData.guid
         binding.button.setOnClickListener {

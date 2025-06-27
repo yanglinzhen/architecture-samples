@@ -17,23 +17,53 @@
 package com.example.android.architecture.blueprints.todoapp
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.navigation.createGraph
+import androidx.navigation.findNavController
+import androidx.navigation.fragment.fragment
+import com.example.android.architecture.blueprints.todoapp.data.entity.AuthData
+import com.example.android.architecture.blueprints.todoapp.data.entity.Credentials
+import com.example.android.architecture.blueprints.todoapp.data.entity.CustomNavType
+import com.example.android.architecture.blueprints.todoapp.data.entity.UserData
+import com.example.android.architecture.blueprints.todoapp.page.auth.AuthFragment
+import com.example.android.architecture.blueprints.todoapp.page.landing.LandingFragment
 import dagger.hilt.android.AndroidEntryPoint
+import kotlin.reflect.typeOf
 
 /**
  * Main activity for the todoapp
  */
 @AndroidEntryPoint
-class TodoActivity : ComponentActivity() {
-
+class TodoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        setContent {
-            TodoTheme {
-                TodoNavGraph()
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.layout_main)
+        ViewCompat.setOnApplyWindowInsetsListener(findViewById(R.id.nav_host)) { v, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
+            insets
+        }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        val navController = findNavController(R.id.nav_host)
+        navController.graph = navController.createGraph(
+            startDestination = UserData("1", "Jake")
+        ) {
+            fragment<LandingFragment, UserData> {
+                label = "Landing"
+            }
+            fragment<AuthFragment, AuthData>(
+                typeMap = mapOf(
+                    typeOf<Credentials>() to CustomNavType.CredentialsType
+                )
+            ) {
+                label = "Auth"
             }
         }
     }

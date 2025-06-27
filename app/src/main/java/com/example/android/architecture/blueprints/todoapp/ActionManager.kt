@@ -1,141 +1,106 @@
 package com.example.android.architecture.blueprints.todoapp
 
-import android.os.Build
-import androidx.annotation.RequiresApi
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.ArrowRight
+import androidx.compose.material.icons.filled.InsertDriveFile
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 
-interface State
-
-interface Store<S : State> {
-    var state: S
-    fun addActionHandler(actionHandler: ActionHandler)
-    fun onAction(action: Action<*>)
-    fun performAction(action: Action<*>)
+sealed class TreeNode(val name: String) {
+    class Directory(name: String, val children: List<TreeNode> = emptyList()) : TreeNode(name) {
+        var isExpanded = false
+    }
+    class File(name: String) : TreeNode(name)
 }
 
-interface Action<S : State> {
-    fun execute(state: S): S
-}
-
-class ActionManager {
-    private val actionStoreMap = mutableMapOf<Class<out Action<*>>, MutableList<Store<*>>>()
-
-    @RequiresApi(Build.VERSION_CODES.N)
-    fun <S : State, T : Action<*>> registerAction(action: Class<T>, vararg store: Store<S>) {
-        actionStoreMap.computeIfAbsent(action) { mutableListOf() }.addAll(store)
-    }
-
-    fun executeAction(action: Action<*>) {
-        println("ActionManager executeAction: $action")
-        actionStoreMap[action::class.java]?.forEach {
-            it.onAction(action)
-        }
-
-    }
-}
-
-// Define a concrete State
-data class CounterState(val count: Int) : State
-
-// Define a concrete Action
-class IncrementAction : Action<CounterState> {
-    override fun execute(state: CounterState): CounterState {
-        return CounterState(state.count + 1)
-    }
-}
-
-class DecrementAction : Action<CounterState> {
-    override fun execute(state: CounterState): CounterState {
-        return CounterState(state.count - 1)
-    }
-}
-
-// Define a concrete Store
-class CounterStore(
-
-    override var state: CounterState
-
-) : Store<CounterState> {
-    private var actionHandler: ActionHandler? = null
-    override fun addActionHandler(actionHandler: ActionHandler) {
-        this.actionHandler = actionHandler
-    }
-
-    override fun onAction(action: Action<*>) {
-        println("CounterStore onAction: $state")
-        println("CounterStore onAction: $action")
-    }
-
-    override fun performAction(action: Action<*>) {
-        println("CounterStore performAction: $state")
-        println("CounterStore performAction: $action")
-        actionHandler?.handle(action)
-    }
-}
-
-interface ComponentMiddleware<T : Action<*>, R : Action<*>> {
-    operator fun invoke(action: T, next: (R) -> Unit)
-}
-
-class SimpleMiddleware(
-    val value1: Int,
-    val value2: Int
-) : ComponentMiddleware<IncrementAction, DecrementAction> {
-    override fun invoke(
-        action: IncrementAction,
-        next: (DecrementAction) -> Unit
-    ) {
-        println("Run middleware: $this, action: $action")
-        next(DecrementAction())
-    }
-
-}
-
-interface ActionHandler {
-    fun <T : Action<*>> handle(action: T)
-}
-
-class CommonActionHandler(
-    private val actionManager: ActionManager
-) : ActionHandler {
-    private val middlewareList: MutableList<ComponentMiddleware<Action<*>, Action<*>>> by lazy {
-        mutableListOf()
-    }
-
-    fun <T : ComponentMiddleware<*, *>> applyMiddlewares(vararg middlewares: T) {
-        middlewares.filterIsInstance<ComponentMiddleware<Action<*>, Action<*>>>().also {
-            middlewareList.addAll(it)
-        }
-    }
-
-    override fun <T : Action<*>> handle(action: T) {
-        println("CommonActionHandler handle: $action")
-        when (action) {
-            is IncrementAction -> {
-                middlewareList.fold(action) { acc, middleware ->
-                    middleware(acc) { newAction ->
-                        actionManager.executeAction(newAction)
-                    }
-                    acc
+@Composable
+fun TreeItem(node: TreeNode, level: Int = 0) {
+    val padding = (level * 16).dp
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable {
+                if (node is TreeNode.Directory) {
+                    node.isExpanded = !node.isExpanded
                 }
+            }
+            .padding(vertical = 4.dp, horizontal = 8.dp)
+    ) {
+        Box(modifier = Modifier.width(padding))
+        when (node) {
+            is TreeNode.Directory -> {
+                Icon(
+                    imageVector = if (node.isExpanded) Icons.Default.ArrowDropDown else Icons.Default.ArrowRight,
+                    contentDescription = null
+                )
+                Text(
+                    text = node.name,
+                    style = MaterialTheme.typography.bodyLarge,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
+                if (node.isExpanded) {
+                    LazyColumn(modifier = Modifier.padding(start = 16.dp)) {
+                        items(node.children.size) { index ->
+                            TreeItem(node = node.children[index], level = level + 1)
+                        }
+                    }
+                }
+            }
+            is TreeNode.File -> {
+                Icon(
+                    imageVector = Icons.Default.InsertDriveFile,
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp)
+                )
+                Text(
+                    text = node.name,
+                    style = MaterialTheme.typography.bodyMedium,
+                    modifier = Modifier.padding(start = 4.dp)
+                )
             }
         }
     }
-
 }
 
-@RequiresApi(Build.VERSION_CODES.N)
-fun main() {
-    val actionManager = ActionManager()
-    val commonActionHandler = CommonActionHandler(actionManager).also {
-        it.applyMiddlewares(SimpleMiddleware(1, 2))
+@Preview
+@Composable
+fun FileTree() {
+    val sampleTree = rememberSaveable {
+        TreeNode.Directory("app", listOf(
+            TreeNode.Directory("src", listOf(
+                TreeNode.Directory("main", listOf(
+                    TreeNode.File("AndroidManifest.xml"),
+                    TreeNode.Directory("java", listOf(
+                        TreeNode.Directory("com", listOf(
+                            TreeNode.Directory("example", listOf(
+                                TreeNode.File("ActionManager.kt")
+                            ))
+                        ))
+                    ))
+                )),
+                TreeNode.File("build.gradle")
+            ))
+        ))
     }
-
-    val counterStore = CounterStore(CounterState(0))
-    actionManager.registerAction(IncrementAction::class.java, counterStore)
-
-    counterStore.addActionHandler(commonActionHandler)
-    counterStore.performAction(IncrementAction())
-//    actionManager.executeAction(IncrementAction())
-
-    println(counterStore.state)
+    
+    LazyColumn(modifier = Modifier.padding(16.dp)) {
+        item {
+            TreeItem(node = sampleTree)
+        }
+    }
 }

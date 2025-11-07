@@ -25,7 +25,6 @@ import dagger.hilt.android.AndroidEntryPoint
 /**
  * Main activity for the todoapp
  */
-@AndroidEntryPoint
 class TodoActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -33,7 +32,7 @@ class TodoActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             TodoTheme {
-                TodoNavGraph()
+                HelloWorldScreen()
             }
         }
     }

@@ -17,23 +17,25 @@
 package com.example.android.architecture.blueprints.todoapp
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
+import androidx.appcompat.app.AppCompatActivity
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Main activity for the todoapp
  */
-class TodoActivity : ComponentActivity() {
+class TodoActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            TodoTheme {
-                HelloWorldScreen()
-            }
+        
+        // 使用传统的布局文件
+        setContentView(R.layout.activity_todo)
+        
+        // 如果 savedInstanceState 为 null，添加 Fragment
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, TodoFragment())
+                .commitNow()
         }
     }
 }

@@ -33,7 +33,11 @@ class CardViewPagerAdapter : RecyclerView.Adapter<CardViewPagerAdapter.ViewHolde
         "Card Page 1",
         "Card Page 2",
         "Card Page 3"
-    )
+    ).map {
+        val itemCount = Random.nextInt(6, 15)
+        val items = (1..itemCount).joinToString("\n") { i -> "RecyclerViewItem $i" }
+        "$it\n$items"
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ViewpagerMainPageBinding.inflate(LayoutInflater.from(parent.context), parent, false)

@@ -30,15 +30,12 @@
         android:layout_height="match_parent"
         android:layout_marginTop="?attr/actionBarSize">
 
-        <!-- This can hold your main content above the ViewPager -->
-        <TextView
-            android:id="@+id/main_content_text"
+        <!-- Main Content ViewPager2 -->
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/main_content_viewpager"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_margin="16dp"
-            android:text="Main Content Area"
-            android:textSize="18sp"
-            android:gravity="center"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
@@ -87,7 +84,6 @@
                 android:id="@+id/tab_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="8dp"
                 android:background="@android:color/transparent"
                 app:tabIndicatorColor="?attr/colorPrimary"
                 app:tabTextColor="?attr/colorOnSurface"

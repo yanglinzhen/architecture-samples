@@ -40,6 +40,7 @@ class TodoFragment : Fragment() {
     
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<MaterialCardView>
     private lateinit var adapter: TodoViewPagerAdapter
+    private lateinit var mainContentAdapter: CardViewPagerAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -54,6 +55,7 @@ class TodoFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         
         setupViews()
+        setupMainContentViewPager()
         setupViewPager()
         setupBottomSheet()
     }
@@ -64,6 +66,12 @@ class TodoFragment : Fragment() {
         
         // 找到 BottomSheet
         bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheet)
+    }
+
+    private fun setupMainContentViewPager() {
+        // 设置主内容区域的 ViewPager2 适配器
+        mainContentAdapter = CardViewPagerAdapter()
+        binding.mainContentViewpager.adapter = mainContentAdapter
     }
 
     private fun setupViewPager() {

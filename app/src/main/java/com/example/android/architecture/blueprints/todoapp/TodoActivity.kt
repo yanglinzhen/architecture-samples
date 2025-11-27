@@ -18,6 +18,7 @@ package com.example.android.architecture.blueprints.todoapp
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import com.example.android.architecture.blueprints.todoapp.databinding.ActivityTodoBinding
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
@@ -25,16 +26,19 @@ import dagger.hilt.android.AndroidEntryPoint
  */
 class TodoActivity : AppCompatActivity() {
 
+    private lateinit var binding: ActivityTodoBinding
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // 使用传统的布局文件
-        setContentView(R.layout.activity_todo)
+        // 使用 ViewBinding
+        binding = ActivityTodoBinding.inflate(layoutInflater)
+        setContentView(binding.root)
         
         // 如果 savedInstanceState 为 null，添加 Fragment
         if (savedInstanceState == null) {
             supportFragmentManager.beginTransaction()
-                .replace(R.id.fragment_container, TodoFragment())
+                .replace(binding.fragmentContainer.id, TodoFragment())
                 .commitNow()
         }
     }

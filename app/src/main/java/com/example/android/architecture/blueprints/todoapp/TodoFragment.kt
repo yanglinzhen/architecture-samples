@@ -22,6 +22,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.viewpager2.widget.ViewPager2
+import com.example.android.architecture.blueprints.todoapp.databinding.FragmentTodoBinding
 import com.google.android.material.appbar.AppBarLayout
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomsheet.BottomSheetBehavior
@@ -34,50 +35,44 @@ import com.google.android.material.tabs.TabLayoutMediator
  */
 class TodoFragment : Fragment() {
 
-    private lateinit var viewPager: ViewPager2
+    private var _binding: FragmentTodoBinding? = null
+    private val binding get() = _binding!!
+    
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<MaterialCardView>
-    private lateinit var appBarLayout: AppBarLayout
-    private lateinit var toolbar: MaterialToolbar
-    private lateinit var tabLayout: TabLayout
     private lateinit var adapter: TodoViewPagerAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
-    ): View? {
-        return inflater.inflate(R.layout.fragment_todo, container, false)
+    ): View {
+        _binding = FragmentTodoBinding.inflate(inflater, container, false)
+        return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        setupViews(view)
+        setupViews()
         setupViewPager()
         setupBottomSheet()
     }
 
-    private fun setupViews(view: View) {
-        viewPager = view.findViewById(R.id.view_pager)
-        appBarLayout = view.findViewById(R.id.app_bar_layout)
-        toolbar = view.findViewById(R.id.toolbar)
-        tabLayout = view.findViewById(R.id.tab_layout)
-        
+    private fun setupViews() {
         // 设置 Toolbar
-        toolbar.title = "Todo App"
+        binding.toolbar.title = "Todo App"
         
         // 找到 BottomSheet
-        val bottomSheet: MaterialCardView = view.findViewById(R.id.bottom_sheet)
-        bottomSheetBehavior = BottomSheetBehavior.from(bottomSheet)
+        bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheet)
     }
 
     private fun setupViewPager() {
         // 设置 ViewPager2 的适配器
         adapter = TodoViewPagerAdapter()
-        viewPager.adapter = adapter
+        binding.viewPager.adapter = adapter
         
         // 设置 TabLayout 与 ViewPager2 的关联
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
+        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
             when (position) {
                 0 -> tab.text = "任务"
                 1 -> tab.text = "统计"
@@ -99,11 +94,11 @@ class TodoFragment : Fragment() {
                 when (newState) {
                     BottomSheetBehavior.STATE_EXPANDED -> {
                         // 全屏展开时的处理
-                        appBarLayout.setExpanded(true, true)
+                        binding.appBarLayout.setExpanded(true, true)
                     }
                     BottomSheetBehavior.STATE_COLLAPSED -> {
                         // 收起时的处理
-                        appBarLayout.setExpanded(false, true)
+                        binding.appBarLayout.setExpanded(false, true)
                     }
                     BottomSheetBehavior.STATE_DRAGGING -> {
                         // 拖拽中的处理
@@ -119,5 +114,10 @@ class TodoFragment : Fragment() {
                 // slideOffset 从 -1 到 1，-1 表示完全收起，1 表示完全展开
             }
         })
+    }
+    
+    override fun onDestroyView() {
+        super.onDestroyView()
+        _binding = null
     }
 }

@@ -17,10 +17,9 @@
 package com.example.android.architecture.blueprints.todoapp
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
-import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.example.android.architecture.blueprints.todoapp.databinding.ViewpagerPageBinding
 
 /**
  * Simple ViewPager2 adapter for demo purposes
@@ -34,16 +33,8 @@ class TodoViewPagerAdapter : RecyclerView.Adapter<TodoViewPagerAdapter.ViewHolde
     )
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        // 创建一个使用 match_parent 的 TextView
-        val textView = TextView(parent.context).apply {
-            layoutParams = ViewGroup.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
-            )
-            textSize = 18f
-            gravity = android.view.Gravity.CENTER
-        }
-        return ViewHolder(textView)
+        val binding = ViewpagerPageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -52,11 +43,10 @@ class TodoViewPagerAdapter : RecyclerView.Adapter<TodoViewPagerAdapter.ViewHolde
 
     override fun getItemCount(): Int = pages.size
 
-    class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val textView: TextView = itemView as TextView
-
+    class ViewHolder(private val binding: ViewpagerPageBinding) : RecyclerView.ViewHolder(binding.root) {
+        
         fun bind(pageTitle: String) {
-            textView.text = pageTitle
+            binding.pageText.text = pageTitle
         }
     }
 }

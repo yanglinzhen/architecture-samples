@@ -18,8 +18,10 @@ package com.example.android.architecture.blueprints.todoapp
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.android.architecture.blueprints.todoapp.databinding.ViewpagerPageBinding
+import kotlin.random.Random
 
 /**
  * Simple ViewPager2 adapter for demo purposes
@@ -28,12 +30,24 @@ class TodoViewPagerAdapter : RecyclerView.Adapter<TodoViewPagerAdapter.ViewHolde
 
     private val pages = listOf(
         "Page 1: Tasks",
-        "Page 2: Statistics", 
+        "Page 2: Statistics",
         "Page 3: Settings"
     )
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ViewpagerPageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+
+        // 生成随机数量的项目（5-10个）
+        val itemCount = Random.nextInt(15, 20)
+        val items = (1..itemCount).map { "RecyclerViewItem $it" }
+
+        // 创建并设置 RecyclerView 适配器
+        val recyclerViewAdapter = RecyclerViewAdapter(items)
+        binding.recyclerView.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = recyclerViewAdapter
+        }
+
         return ViewHolder(binding)
     }
 
@@ -46,7 +60,6 @@ class TodoViewPagerAdapter : RecyclerView.Adapter<TodoViewPagerAdapter.ViewHolde
     class ViewHolder(private val binding: ViewpagerPageBinding) : RecyclerView.ViewHolder(binding.root) {
         
         fun bind(pageTitle: String) {
-            binding.pageText.text = pageTitle
         }
     }
 }

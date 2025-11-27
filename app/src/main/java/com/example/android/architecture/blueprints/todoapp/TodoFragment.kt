@@ -91,7 +91,7 @@ class TodoFragment : Fragment() {
         bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
         
         // 设置高度 - 收起时的高度
-        bottomSheetBehavior.peekHeight = 200 // 200dp 的peek高度
+        bottomSheetBehavior.peekHeight = 500 // 200dp 的peek高度
         
         // 设置滑动监听器
         bottomSheetBehavior.addBottomSheetCallback(object : BottomSheetBehavior.BottomSheetCallback() {

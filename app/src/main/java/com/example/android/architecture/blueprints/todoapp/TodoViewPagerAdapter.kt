@@ -34,9 +34,16 @@ class TodoViewPagerAdapter : RecyclerView.Adapter<TodoViewPagerAdapter.ViewHolde
     )
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val view = LayoutInflater.from(parent.context)
-            .inflate(android.R.layout.simple_list_item_1, parent, false)
-        return ViewHolder(view)
+        // 创建一个使用 match_parent 的 TextView
+        val textView = TextView(parent.context).apply {
+            layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            textSize = 18f
+            gravity = android.view.Gravity.CENTER
+        }
+        return ViewHolder(textView)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -46,12 +53,10 @@ class TodoViewPagerAdapter : RecyclerView.Adapter<TodoViewPagerAdapter.ViewHolde
     override fun getItemCount(): Int = pages.size
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        private val textView: TextView = itemView.findViewById(android.R.id.text1)
+        private val textView: TextView = itemView as TextView
 
         fun bind(pageTitle: String) {
             textView.text = pageTitle
-            textView.textSize = 18f
-            textView.gravity = android.view.Gravity.CENTER
         }
     }
 }

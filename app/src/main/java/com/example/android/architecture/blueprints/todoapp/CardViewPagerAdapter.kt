@@ -86,7 +86,7 @@ class CardViewPagerAdapter(
             binding.pageTitle.text = pageTitle
             
             // 在视图布局完成后计算card_image的底部坐标
-            binding.cardImage.post {
+            binding.root.post {
                 val bottomY = binding.pageTitle.height + binding.cardImage.height
                 Log.d("CardViewPagerAdapter", "bind: position=$position, bottomY(px)=$bottomY")
                 // 将像素值转换为dp值

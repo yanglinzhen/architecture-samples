@@ -22,6 +22,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
 import androidx.viewpager2.widget.ViewPager2
 import com.example.android.architecture.blueprints.todoapp.databinding.FragmentTodoBinding
 import com.google.android.material.appbar.AppBarLayout
@@ -48,6 +49,9 @@ class TodoFragment : Fragment() {
     private lateinit var adapter: TodoViewPagerAdapter
     private lateinit var mainContentAdapter: CardViewPagerAdapter
     private lateinit var actionBarDrawerToggle: ActionBarDrawerToggle
+    
+    // 使用ViewModel管理数据
+    private val todoViewModel: TodoViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -65,6 +69,20 @@ class TodoFragment : Fragment() {
         setupMainContentViewPager()
         setupViewPager()
         setupBottomSheet()
+        
+        // 初始化适配器数据
+        initializeAdaptersData()
+    }
+    
+    /**
+     * 初始化适配器数据
+     */
+    private fun initializeAdaptersData() {
+        // 设置CardViewPagerAdapter的初始数据
+        mainContentAdapter.updateData(todoViewModel.cardPages)
+        
+        // 设置TodoViewPagerAdapter的初始数据
+        adapter.updateData(todoViewModel.todoPages, todoViewModel.todoPageData)
     }
 
     private fun setupViews() {
@@ -209,6 +227,35 @@ class TodoFragment : Fragment() {
                 // slideOffset 从 -1 到 1，-1 表示完全收起，1 表示完全展开
             }
         })
+    }
+    
+    /**
+     * 更新CardViewPagerAdapter的数据
+     */
+    fun updateMainContentData(newPages: List<String>) {
+        todoViewModel.updateCardPages(newPages)
+        mainContentAdapter.updateData(newPages)
+    }
+    
+    /**
+     * 更新TodoViewPagerAdapter的数据
+     */
+    fun updateTodoViewData(newPages: List<String>, newPageData: Map<Int, List<String>>? = null) {
+        todoViewModel.updateTodoPages(newPages, newPageData)
+        adapter.updateData(newPages, newPageData)
+    }
+    
+    /**
+     * 刷新所有数据（重新生成随机数据）
+     */
+    fun refreshAllData() {
+        todoViewModel.refreshAllData()
+        
+        // 更新CardViewPagerAdapter
+        mainContentAdapter.updateData(todoViewModel.cardPages)
+        
+        // 更新TodoViewPagerAdapter
+        adapter.updateData(todoViewModel.todoPages, todoViewModel.todoPageData)
     }
     
     override fun onDestroyView() {

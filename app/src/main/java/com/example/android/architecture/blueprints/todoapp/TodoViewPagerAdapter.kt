@@ -21,45 +21,48 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.android.architecture.blueprints.todoapp.databinding.ViewpagerPageBinding
-import kotlin.random.Random
 
 /**
  * Simple ViewPager2 adapter for demo purposes
  */
 class TodoViewPagerAdapter : RecyclerView.Adapter<TodoViewPagerAdapter.ViewHolder>() {
 
-    private val pages = listOf(
-        "Page 1: Tasks",
-        "Page 2: Statistics",
-        "Page 3: Settings"
-    )
+    private var pages = listOf<String>()
+    
+    // 存储每个页面的数据
+    private var pageData = mapOf<Int, List<String>>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ViewpagerPageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
-
-        // 生成随机数量的项目（5-10个）
-        val itemCount = Random.nextInt(15, 20)
-        val items = (1..itemCount).map { "RecyclerViewItem $it" }
-
-        // 创建并设置 RecyclerView 适配器
-        val recyclerViewAdapter = RecyclerViewAdapter(items)
-        binding.recyclerView.apply {
-            layoutManager = LinearLayoutManager(context)
-            adapter = recyclerViewAdapter
-        }
-
         return ViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(pages[position])
+        holder.bind(pages[position], pageData[position] ?: emptyList())
     }
 
     override fun getItemCount(): Int = pages.size
 
+    /**
+     * 更新适配器数据
+     * @param newPages 新的页面标题列表
+     * @param newPageData 新的页面数据映射（可选）
+     */
+    fun updateData(newPages: List<String>, newPageData: Map<Int, List<String>>? = null) {
+        pages = newPages
+        pageData = newPageData ?: emptyMap()
+        notifyDataSetChanged()
+    }
+
     class ViewHolder(private val binding: ViewpagerPageBinding) : RecyclerView.ViewHolder(binding.root) {
         
-        fun bind(pageTitle: String) {
+        fun bind(pageTitle: String, items: List<String>) {
+            // 创建并设置 RecyclerView 适配器
+            val recyclerViewAdapter = RecyclerViewAdapter(items)
+            binding.recyclerView.apply {
+                layoutManager = LinearLayoutManager(context)
+                adapter = recyclerViewAdapter
+            }
         }
     }
 }

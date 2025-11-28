@@ -23,7 +23,6 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.android.architecture.blueprints.todoapp.databinding.ViewpagerMainPageBinding
 import com.example.android.architecture.blueprints.todoapp.databinding.ViewpagerPageBinding
-import kotlin.random.Random
 
 /**
  * Callback interface for card image bottom coordinate
@@ -40,15 +39,7 @@ class CardViewPagerAdapter(
     private val callback: CardImageBottomCallback? = null
 ) : RecyclerView.Adapter<CardViewPagerAdapter.ViewHolder>() {
 
-    private val pages = listOf(
-        "Card Page 1",
-        "Card Page 2",
-        "Card Page 3"
-    ).map {
-        val itemCount = Random.nextInt(6, 15)
-        val items = (1..itemCount).joinToString("\n") { i -> "RecyclerViewItem $i" }
-        "$it\n$items"
-    }
+    private var pages = listOf<String>()
     
     // 保存每个位置的bottomYInDp值
     private val bottomYInDpMap = mutableMapOf<Int, Int>()
@@ -76,6 +67,17 @@ class CardViewPagerAdapter(
         Log.d("CardViewPagerAdapter", "notifyBottomYInDpCalculated: position=$position, bottomYInDp=$bottomYInDp")
         bottomYInDpMap[position] = bottomYInDp
         callback?.onCardImageBottomCalculatedInDp(bottomYInDp)
+    }
+    
+    /**
+     * 更新适配器数据
+     * @param newPages 新的页面数据列表
+     */
+    fun updateData(newPages: List<String>) {
+        pages = newPages
+        // 清空之前的bottomYInDp缓存
+        bottomYInDpMap.clear()
+        notifyDataSetChanged()
     }
 
     class ViewHolder(private val binding: ViewpagerMainPageBinding) : RecyclerView.ViewHolder(binding.root) {

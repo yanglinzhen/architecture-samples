@@ -24,6 +24,7 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
+import androidx.recyclerview.widget.RecyclerView
 import androidx.viewpager2.widget.ViewPager2
 import com.example.android.architecture.blueprints.todoapp.databinding.FragmentTodoBinding
 import com.google.android.material.appbar.AppBarLayout
@@ -180,9 +181,40 @@ class TodoFragment : Fragment() {
         
         // 添加页面切换监听器
         binding.mainContentViewpager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageScrollStateChanged(state: Int) {
+                super.onPageScrollStateChanged(state)
+                // 同步view_pager的滚动状态
+                when (state) {
+                    ViewPager2.SCROLL_STATE_DRAGGING -> {
+                        // 开始拖拽时，同步view_pager的状态
+                    }
+                    ViewPager2.SCROLL_STATE_SETTLING -> {
+                        // 自动滚动到页面时，同步view_pager的状态
+                    }
+                    ViewPager2.SCROLL_STATE_IDLE -> {
+                        // 滚动完成时，确保view_pager的页面位置一致
+                        if (binding.viewPager.currentItem != binding.mainContentViewpager.currentItem) {
+                            binding.viewPager.setCurrentItem(binding.mainContentViewpager.currentItem, false)
+                        }
+                    }
+                }
+            }
+            
+            override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {
+                super.onPageScrolled(position, positionOffset, positionOffsetPixels)
+                // 同步view_pager的滑动位置
+                syncViewPagerScroll(position, positionOffset)
+            }
+            
             override fun onPageSelected(position: Int) {
                 super.onPageSelected(position)
                 Log.d("TodoFragment", "onPageSelected: position=$position")
+                
+                // 同步view_pager的页面切换
+                if (binding.viewPager.currentItem != position) {
+                    binding.viewPager.setCurrentItem(position, false)
+                }
+                
                 // 当页面切换完成后，获取该位置的bottomYInDp值并调用回调
                 mainContentAdapter.getBottomYInDp(position)?.let { bottomYInDp ->
                     updatePeekHeight(bottomYInDp)
@@ -191,6 +223,12 @@ class TodoFragment : Fragment() {
                 }
             }
         })
+        
+        // 禁用view_pager的用户输入，但允许程序控制
+        binding.viewPager.isUserInputEnabled = false
+        
+        // 禁用view_pager的嵌套滚动，防止滑动冲突
+        (binding.viewPager.getChildAt(0) as? RecyclerView)?.overScrollMode = View.OVER_SCROLL_NEVER
     }
 
     fun updatePeekHeight(bottomYInDp: Int) {
@@ -211,6 +249,12 @@ class TodoFragment : Fragment() {
         // 设置 ViewPager2 的适配器
         adapter = TodoViewPagerAdapter()
         binding.viewPager.adapter = adapter
+        
+        // 禁用view_pager的左右滑动功能
+        binding.viewPager.isUserInputEnabled = false
+        
+        // 设置view_pager的初始页面与main_content_viewpager同步
+        binding.viewPager.setCurrentItem(binding.mainContentViewpager.currentItem, false)
     }
 
     private fun setupBottomSheet() {
@@ -260,7 +304,6 @@ class TodoFragment : Fragment() {
      * 更新TodoViewPagerAdapter的数据
      */
     fun updateTodoViewData(newPages: List<String>, newPageData: Map<Int, List<String>>? = null) {
-        todoViewModel.updateTodoPages(newPages, newPageData)
         // 适配器将通过StateFlow监听自动更新，无需手动调用
     }
     
@@ -270,6 +313,41 @@ class TodoFragment : Fragment() {
     fun refreshAllData() {
         todoViewModel.refreshAllData()
         // 适配器将通过StateFlow监听自动更新，无需手动调用
+    }
+    
+    /**
+     * 同步ViewPager的滑动位置
+     * @param position 当前页面位置
+     * @param positionOffset 页面偏移量（0-1）
+     */
+    private fun syncViewPagerScroll(position: Int, positionOffset: Float) {
+        try {
+            // 使用反射获取ViewPager2的RecyclerView
+            val recyclerView = binding.viewPager.getChildAt(0) as RecyclerView
+            val layoutManager = recyclerView.layoutManager as androidx.recyclerview.widget.LinearLayoutManager
+            
+            // 计算目标滚动位置
+            val itemWidth = recyclerView.width
+            val targetScrollX = (position + positionOffset) * itemWidth
+            
+            // 计算当前滚动位置
+            val currentScrollX = recyclerView.computeHorizontalScrollOffset()
+            val scrollDelta = (targetScrollX - currentScrollX).toInt()
+            
+            // 滚动到目标位置
+            recyclerView.scrollBy(scrollDelta, 0)
+            
+            // 确保页面位置正确
+            if (positionOffset == 0f && binding.viewPager.currentItem != position) {
+                binding.viewPager.setCurrentItem(position, false)
+            }
+        } catch (e: Exception) {
+            Log.e("TodoFragment", "Error syncing ViewPager scroll", e)
+            // 如果反射失败，使用setCurrentItem作为备选方案
+            if (binding.viewPager.currentItem != position) {
+                binding.viewPager.setCurrentItem(position, false)
+            }
+        }
     }
     
     override fun onDestroyView() {

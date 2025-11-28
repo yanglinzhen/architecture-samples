@@ -23,6 +23,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.viewpager2.widget.ViewPager2
 import com.example.android.architecture.blueprints.todoapp.databinding.FragmentTodoBinding
 import com.google.android.material.appbar.AppBarLayout
@@ -35,6 +36,7 @@ import androidx.appcompat.app.ActionBarDrawerToggle
 import androidx.core.view.marginTop
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
+import kotlinx.coroutines.launch
 import timber.log.Timber
 
 /**
@@ -70,19 +72,36 @@ class TodoFragment : Fragment() {
         setupViewPager()
         setupBottomSheet()
         
-        // 初始化适配器数据
-        initializeAdaptersData()
+        // 监听ViewModel数据变化
+        observeViewModel()
     }
     
     /**
-     * 初始化适配器数据
+     * 监听ViewModel数据变化
      */
-    private fun initializeAdaptersData() {
-        // 设置CardViewPagerAdapter的初始数据
-        mainContentAdapter.updateData(todoViewModel.cardPages)
+    private fun observeViewModel() {
+        // 监听CardViewPagerAdapter的数据变化
+        viewLifecycleOwner.lifecycleScope.launch {
+            todoViewModel.cardPages.collect { pages ->
+                mainContentAdapter.updateData(pages)
+            }
+        }
         
-        // 设置TodoViewPagerAdapter的初始数据
-        adapter.updateData(todoViewModel.todoPages, todoViewModel.todoPageData)
+        // 监听TodoViewPagerAdapter的页面标题变化
+        viewLifecycleOwner.lifecycleScope.launch {
+            todoViewModel.todoPages.collect { pages ->
+                // 更新适配器数据，保持当前页面数据不变
+                adapter.updateData(pages, todoViewModel.todoPageData.value)
+            }
+        }
+        
+        // 监听TodoViewPagerAdapter的页面数据变化
+        viewLifecycleOwner.lifecycleScope.launch {
+            todoViewModel.todoPageData.collect { pageData ->
+                // 更新适配器数据，保持当前页面标题不变
+                adapter.updateData(todoViewModel.todoPages.value, pageData)
+            }
+        }
     }
 
     private fun setupViews() {
@@ -234,7 +253,7 @@ class TodoFragment : Fragment() {
      */
     fun updateMainContentData(newPages: List<String>) {
         todoViewModel.updateCardPages(newPages)
-        mainContentAdapter.updateData(newPages)
+        // 适配器将通过StateFlow监听自动更新，无需手动调用
     }
     
     /**
@@ -242,7 +261,7 @@ class TodoFragment : Fragment() {
      */
     fun updateTodoViewData(newPages: List<String>, newPageData: Map<Int, List<String>>? = null) {
         todoViewModel.updateTodoPages(newPages, newPageData)
-        adapter.updateData(newPages, newPageData)
+        // 适配器将通过StateFlow监听自动更新，无需手动调用
     }
     
     /**
@@ -250,12 +269,7 @@ class TodoFragment : Fragment() {
      */
     fun refreshAllData() {
         todoViewModel.refreshAllData()
-        
-        // 更新CardViewPagerAdapter
-        mainContentAdapter.updateData(todoViewModel.cardPages)
-        
-        // 更新TodoViewPagerAdapter
-        adapter.updateData(todoViewModel.todoPages, todoViewModel.todoPageData)
+        // 适配器将通过StateFlow监听自动更新，无需手动调用
     }
     
     override fun onDestroyView() {

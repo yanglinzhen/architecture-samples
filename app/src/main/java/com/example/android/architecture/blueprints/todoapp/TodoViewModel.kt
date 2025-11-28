@@ -17,6 +17,11 @@
 package com.example.android.architecture.blueprints.todoapp
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlin.random.Random
 
 /**
@@ -25,36 +30,50 @@ import kotlin.random.Random
 class TodoViewModel : ViewModel() {
     
     // CardViewPagerAdapter 的页面数据
-    private var _cardPages = listOf(
-        "Card Page 1",
-        "Card Page 2",
-        "Card Page 3"
-    ).map {
-        val itemCount = Random.nextInt(6, 15)
-        val items = (1..itemCount).joinToString("\n") { i -> "RecyclerViewItem $i" }
-        "$it\n$items"
-    }
-    val cardPages get() = _cardPages
+    private val _cardPages = MutableStateFlow<List<String>>(
+        listOf(
+            "Card Page 1",
+            "Card Page 2",
+            "Card Page 3"
+        ).map {
+            val itemCount = Random.nextInt(6, 15)
+            val items = (1..itemCount).joinToString("\n") { i -> "RecyclerViewItem $i" }
+            "$it\n$items"
+        }
+    )
+    val cardPages: StateFlow<List<String>> = _cardPages.asStateFlow()
     
     // TodoViewPagerAdapter 的页面标题
-    private var _todoPages = listOf(
-        "Page 1: Tasks",
-        "Page 2: Statistics",
-        "Page 3: Settings"
+    private val _todoPages = MutableStateFlow<List<String>>(
+        listOf(
+            "Page 1: Tasks",
+            "Page 2: Statistics",
+            "Page 3: Settings"
+        )
     )
-    val todoPages get() = _todoPages
+    val todoPages: StateFlow<List<String>> = _todoPages.asStateFlow()
     
     // TodoViewPagerAdapter 的页面数据
-    private var _todoPageData = mutableMapOf<Int, List<String>>()
+    private val _todoPageData = MutableStateFlow<Map<Int, List<String>>>(emptyMap())
+    val todoPageData: StateFlow<Map<Int, List<String>>> = _todoPageData.asStateFlow()
     
     init {
         // 初始化TodoViewPagerAdapter的页面数据
-        for (i in _todoPages.indices) {
-            _todoPageData[i] = generateRandomItems()
-        }
+        initializeTodoPageData()
     }
     
-    val todoPageData: Map<Int, List<String>> get() = _todoPageData
+    /**
+     * 初始化TodoViewPagerAdapter的页面数据
+     */
+    private fun initializeTodoPageData() {
+        viewModelScope.launch {
+            val initialData = mutableMapOf<Int, List<String>>()
+            for (i in _todoPages.value.indices) {
+                initialData[i] = generateRandomItems()
+            }
+            _todoPageData.value = initialData
+        }
+    }
     
     /**
      * 生成随机数量的项目列表
@@ -68,23 +87,28 @@ class TodoViewModel : ViewModel() {
      * 更新CardViewPagerAdapter的数据
      */
     fun updateCardPages(newPages: List<String>) {
-        _cardPages = newPages
+        viewModelScope.launch {
+            _cardPages.value = newPages
+        }
     }
     
     /**
      * 更新TodoViewPagerAdapter的数据
      */
     fun updateTodoPages(newPages: List<String>, newPageData: Map<Int, List<String>>? = null) {
-        _todoPages = newPages
-        
-        // 如果提供了新数据，则使用新数据，否则为每个页面生成随机数据
-        if (newPageData != null) {
-            _todoPageData = newPageData.toMutableMap()
-        } else {
-            _todoPageData.clear()
-            // 为每个页面生成随机数据
-            for (i in newPages.indices) {
-                _todoPageData[i] = generateRandomItems()
+        viewModelScope.launch {
+            _todoPages.value = newPages
+            
+            // 如果提供了新数据，则使用新数据，否则为每个页面生成随机数据
+            if (newPageData != null) {
+                _todoPageData.value = newPageData
+            } else {
+                val newData = mutableMapOf<Int, List<String>>()
+                // 为每个页面生成随机数据
+                for (i in newPages.indices) {
+                    newData[i] = generateRandomItems()
+                }
+                _todoPageData.value = newData
             }
         }
     }
@@ -93,21 +117,24 @@ class TodoViewModel : ViewModel() {
      * 刷新所有数据（重新生成随机数据）
      */
     fun refreshAllData() {
-        // 刷新CardViewPagerAdapter数据
-        _cardPages = listOf(
-            "Card Page 1",
-            "Card Page 2",
-            "Card Page 3"
-        ).map {
-            val itemCount = Random.nextInt(6, 15)
-            val items = (1..itemCount).joinToString("\n") { i -> "RecyclerViewItem $i" }
-            "$it\n$items"
-        }
-        
-        // 刷新TodoViewPagerAdapter数据
-        _todoPageData.clear()
-        for (i in _todoPages.indices) {
-            _todoPageData[i] = generateRandomItems()
+        viewModelScope.launch {
+            // 刷新CardViewPagerAdapter数据
+            _cardPages.value = listOf(
+                "Card Page 1",
+                "Card Page 2",
+                "Card Page 3"
+            ).map {
+                val itemCount = Random.nextInt(6, 15)
+                val items = (1..itemCount).joinToString("\n") { i -> "RecyclerViewItem $i" }
+                "$it\n$items"
+            }
+            
+            // 刷新TodoViewPagerAdapter数据
+            val newData = mutableMapOf<Int, List<String>>()
+            for (i in _todoPages.value.indices) {
+                newData[i] = generateRandomItems()
+            }
+            _todoPageData.value = newData
         }
     }
 }

@@ -17,6 +17,7 @@
 package com.example.android.architecture.blueprints.todoapp
 
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -30,8 +31,10 @@ import com.google.android.material.card.MaterialCardView
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
 import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.core.view.marginTop
 import androidx.drawerlayout.widget.DrawerLayout
 import com.google.android.material.navigation.NavigationView
+import timber.log.Timber
 
 /**
  * Main fragment for the todoapp
@@ -126,8 +129,45 @@ class TodoFragment : Fragment() {
 
     private fun setupMainContentViewPager() {
         // 设置主内容区域的 ViewPager2 适配器
-        mainContentAdapter = CardViewPagerAdapter()
+        mainContentAdapter = CardViewPagerAdapter(object : CardImageBottomCallback {
+            override fun onCardImageBottomCalculated(bottomY: Int) {
+                // 像素值回调（保留用于其他用途）
+                Log.d("TodoFragment", "onCardImageBottomCalculated: bottomY(px)=$bottomY")
+            }
+            
+            override fun onCardImageBottomCalculatedInDp(bottomYInDp: Int) {
+                updatePeekHeight(bottomYInDp)
+            }
+        })
         binding.mainContentViewpager.adapter = mainContentAdapter
+        
+        // 添加页面切换监听器
+        binding.mainContentViewpager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
+            override fun onPageSelected(position: Int) {
+                super.onPageSelected(position)
+                Log.d("TodoFragment", "onPageSelected: position=$position")
+                // 当页面切换完成后，获取该位置的bottomYInDp值并调用回调
+                mainContentAdapter.getBottomYInDp(position)?.let { bottomYInDp ->
+                    updatePeekHeight(bottomYInDp)
+                } ?: run {
+                    Log.d("TodoFragment", "onPageSelected: No bottomYInDp found for position $position")
+                }
+            }
+        })
+    }
+
+    fun updatePeekHeight(bottomYInDp: Int) {
+        // 获取page_container的高度（像素值）
+        val pageContainerHeight = binding.pageContainer.height
+        // 将page_container的高度转换为dp值
+        val pageContainerHeightDp = DisplayUtils.pxToDp(requireContext(), pageContainerHeight)
+        val appbarLayoutHeight = DisplayUtils.pxToDp(requireContext(), binding.appBarLayout.height + binding.mainContentViewpager.marginTop)
+        // 计算page_container的高度减去bottomYInDp
+        val newPeekHeight = pageContainerHeightDp - (bottomYInDp + appbarLayoutHeight)
+        val newPeekHeightPx = DisplayUtils.dpToPx(requireContext(), newPeekHeight)
+        // 更新bottomSheetBehavior的高度
+        Timber.d("onCardImageBottomCalculatedInDp: bottomYInDp=$bottomYInDp, pageContainerHeightDp=$pageContainerHeightDp, newPeekHeight=$newPeekHeight, px=$newPeekHeightPx")
+        bottomSheetBehavior.peekHeight = newPeekHeightPx
     }
 
     private fun setupViewPager() {

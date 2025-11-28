@@ -16,6 +16,7 @@
 
 package com.example.android.architecture.blueprints.todoapp
 
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -25,9 +26,19 @@ import com.example.android.architecture.blueprints.todoapp.databinding.Viewpager
 import kotlin.random.Random
 
 /**
+ * Callback interface for card image bottom coordinate
+ */
+interface CardImageBottomCallback {
+    fun onCardImageBottomCalculated(bottomY: Int)
+    fun onCardImageBottomCalculatedInDp(bottomYInDp: Int)
+}
+
+/**
  * ViewPager2 adapter for displaying cards with centered images
  */
-class CardViewPagerAdapter : RecyclerView.Adapter<CardViewPagerAdapter.ViewHolder>() {
+class CardViewPagerAdapter(
+    private val callback: CardImageBottomCallback? = null
+) : RecyclerView.Adapter<CardViewPagerAdapter.ViewHolder>() {
 
     private val pages = listOf(
         "Card Page 1",
@@ -38,6 +49,9 @@ class CardViewPagerAdapter : RecyclerView.Adapter<CardViewPagerAdapter.ViewHolde
         val items = (1..itemCount).joinToString("\n") { i -> "RecyclerViewItem $i" }
         "$it\n$items"
     }
+    
+    // 保存每个位置的bottomYInDp值
+    private val bottomYInDpMap = mutableMapOf<Int, Int>()
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val binding = ViewpagerMainPageBinding.inflate(LayoutInflater.from(parent.context), parent, false)
@@ -45,16 +59,43 @@ class CardViewPagerAdapter : RecyclerView.Adapter<CardViewPagerAdapter.ViewHolde
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(pages[position])
+        holder.bind(pages[position], this, position)
     }
 
     override fun getItemCount(): Int = pages.size
+    
+    /**
+     * 获取指定位置的bottomYInDp值
+     */
+    fun getBottomYInDp(position: Int): Int? = bottomYInDpMap[position]
+    
+    /**
+     * 通知指定位置的bottomYInDp值已更新
+     */
+    fun notifyBottomYInDpCalculated(position: Int, bottomYInDp: Int) {
+        Log.d("CardViewPagerAdapter", "notifyBottomYInDpCalculated: position=$position, bottomYInDp=$bottomYInDp")
+        bottomYInDpMap[position] = bottomYInDp
+        callback?.onCardImageBottomCalculatedInDp(bottomYInDp)
+    }
 
     class ViewHolder(private val binding: ViewpagerMainPageBinding) : RecyclerView.ViewHolder(binding.root) {
         
-        fun bind(pageTitle: String) {
+        fun bind(pageTitle: String, adapter: CardViewPagerAdapter, position: Int) {
+            Log.d("CardViewPagerAdapter", "bind: position=$position, pageTitle=$pageTitle")
             // 设置页面标题
             binding.pageTitle.text = pageTitle
+            
+            // 在视图布局完成后计算card_image的底部坐标
+            binding.cardImage.post {
+                val bottomY = binding.pageTitle.height + binding.cardImage.height
+                Log.d("CardViewPagerAdapter", "bind: position=$position, bottomY(px)=$bottomY")
+                // 将像素值转换为dp值
+                val bottomYInDp = DisplayUtils.pxToDp(binding.root.context, bottomY)
+                Log.d("CardViewPagerAdapter", "bind: position=$position, bottomYInDp=$bottomYInDp")
+
+                // 保存并通知bottomYInDp值
+                adapter.notifyBottomYInDpCalculated(position, bottomYInDp)
+            }
         }
     }
 }

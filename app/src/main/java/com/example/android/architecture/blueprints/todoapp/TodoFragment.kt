@@ -29,6 +29,9 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.card.MaterialCardView
 import com.google.android.material.tabs.TabLayout
 import com.google.android.material.tabs.TabLayoutMediator
+import androidx.appcompat.app.ActionBarDrawerToggle
+import androidx.drawerlayout.widget.DrawerLayout
+import com.google.android.material.navigation.NavigationView
 
 /**
  * Main fragment for the todoapp
@@ -41,6 +44,7 @@ class TodoFragment : Fragment() {
     private lateinit var bottomSheetBehavior: BottomSheetBehavior<MaterialCardView>
     private lateinit var adapter: TodoViewPagerAdapter
     private lateinit var mainContentAdapter: CardViewPagerAdapter
+    private lateinit var actionBarDrawerToggle: ActionBarDrawerToggle
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -64,8 +68,60 @@ class TodoFragment : Fragment() {
         // 设置 Toolbar
         binding.toolbar.title = "Todo App"
         
+        // 设置 DrawerLayout 和 Toggle
+        setupDrawer()
+        
         // 找到 BottomSheet
         bottomSheetBehavior = BottomSheetBehavior.from(binding.bottomSheet)
+    }
+
+    private fun setupDrawer() {
+        actionBarDrawerToggle = ActionBarDrawerToggle(
+            requireActivity(),
+            binding.drawerLayout,
+            binding.toolbar,
+            R.string.open_drawer,
+            R.string.close_drawer
+        )
+        binding.drawerLayout.addDrawerListener(actionBarDrawerToggle)
+        actionBarDrawerToggle.syncState()
+        
+        // 设置导航项点击监听
+        binding.navigationView.setNavigationItemSelectedListener { item ->
+            when (item.itemId) {
+                R.id.nav_home -> {
+                    // 处理首页点击
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+                R.id.nav_tasks -> {
+                    // 处理任务点击
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+                R.id.nav_completed -> {
+                    // 处理已完成点击
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+                R.id.nav_statistics -> {
+                    // 处理统计点击
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+                R.id.nav_settings -> {
+                    // 处理设置点击
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+                R.id.nav_about -> {
+                    // 处理关于点击
+                    binding.drawerLayout.closeDrawers()
+                    true
+                }
+                else -> false
+            }
+        }
     }
 
     private fun setupMainContentViewPager() {
@@ -78,15 +134,6 @@ class TodoFragment : Fragment() {
         // 设置 ViewPager2 的适配器
         adapter = TodoViewPagerAdapter()
         binding.viewPager.adapter = adapter
-        
-        // 设置 TabLayout 与 ViewPager2 的关联
-        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
-            when (position) {
-                0 -> tab.text = "任务"
-                1 -> tab.text = "统计"
-                2 -> tab.text = "设置"
-            }
-        }.attach()
     }
 
     private fun setupBottomSheet() {

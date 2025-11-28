@@ -68,5 +68,14 @@
     <!-- Content Descriptions -->
     <string name="tasks_header_image_content_description">Tasks header image</string>
     <string name="no_tasks_image_content_description">No tasks image</string>
+    <string name="nav_header_desc">Navigation header</string>
+
+    <!-- Navigation drawer strings -->
+    <string name="nav_home">首页</string>
+    <string name="nav_tasks">任务</string>
+    <string name="nav_statistics">统计</string>
+    <string name="nav_settings">设置</string>
+    <string name="nav_about">关于</string>
+    <string name="close_drawer">Close Drawer</string>
 
 </resources>

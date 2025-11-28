@@ -18,6 +18,7 @@ package com.example.android.architecture.blueprints.todoapp
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.Toolbar
 import com.example.android.architecture.blueprints.todoapp.databinding.ActivityTodoBinding
 import dagger.hilt.android.AndroidEntryPoint
 
